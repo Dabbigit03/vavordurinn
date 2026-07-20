@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Water Counter</title>
+<style>
+  :root {
+    --deep: #0b3d5c;
+    --mid: #1c7ea6;
+    --bright: #3fb8e0;
+    --pale: #eaf7fc;
+    --paper: #ffffff;
+    --ink: #0d2733;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(180deg, var(--pale) 0%, #d6eef7 100%);
+    color: var(--ink);
+    padding: 24px;
+  }
+
+  .card {
+    background: var(--paper);
+    border-radius: 24px;
+    padding: 36px 32px 28px;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(11, 61, 92, 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle, var(--bright) 0%, transparent 70%);
+    opacity: 0.35;
+  }
+
+  h1 {
+    font-size: 15px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin: 0 0 4px;
+    font-weight: 700;
+  }
+
+  .date {
+    font-size: 13px;
+    color: #6b8fa3;
+    margin-bottom: 28px;
+  }
+
+  .drop-wrap {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 18px;
+  }
+
+  .drop-bg, .drop-fg {
+    position: absolute;
+    inset: 0;
+  }
+
+  .drop-bg svg path {
+    transition: fill 0.3s ease;
+  }
+
+  .drop-wrap.pulse .drop-bg {
+    animation: dropPulse 0.5s ease;
+  }
+
+  @keyframes dropPulse {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.12); }
+    60% { transform: scale(0.97); }
+    100% { transform: scale(1); }
+  }
+
+  .ripple {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--bright);
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0);
+    pointer-events: none;
+    animation: rippleOut 0.7s ease-out forwards;
+  }
+
+  @keyframes rippleOut {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 0.55; }
+    100% { transform: translate(-50%, -50%) scale(9); opacity: 0; }
+  }
+
+  .float-plus {
+    position: absolute;
+    left: 50%;
+    top: 30%;
+    transform: translate(-50%, 0);
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--mid);
+    pointer-events: none;
+    animation: floatUp 0.9s ease-out forwards;
+    z-index: 5;
+  }
+
+  @keyframes floatUp {
+    0% { opacity: 0; transform: translate(-50%, 10px) scale(0.8); }
+    20% { opacity: 1; transform: translate(-50%, -4px) scale(1.05); }
+    100% { opacity: 0; transform: translate(-50%, -46px) scale(1); }
+  }
+
+  .count {
+    font-size: 44px;
+    font-weight: 800;
+    color: var(--deep);
+    line-height: 1;
+    position: relative;
+    z-index: 2;
+    margin-top: 38px;
+    display: inline-block;
+  }
+
+  .count.bump {
+    animation: countBump 0.4s ease;
+  }
+
+  @keyframes countBump {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.22); color: var(--bright); }
+    100% { transform: scale(1); }
+  }
+
+  .label {
+    font-size: 13px;
+    color: var(--mid);
+    font-weight: 600;
+    position: relative;
+    z-index: 2;
+    margin-top: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  .size-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .size-btn {
+    flex: 1;
+    border: 2px solid var(--pale);
+    background: var(--pale);
+    color: var(--mid);
+    border-radius: 12px;
+    padding: 10px 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    line-height: 1.3;
+  }
+
+  .size-btn .size-ml {
+    display: block;
+    font-size: 14px;
+  }
+
+  .size-btn.active {
+    background: linear-gradient(135deg, var(--mid), var(--bright));
+    border-color: var(--mid);
+    color: white;
+    box-shadow: 0 6px 14px rgba(63, 184, 224, 0.35);
+  }
+
+  .size-btn.tapped,
+  .custom-add-btn.tapped {
+    animation: sizeTap 0.35s ease;
+  }
+
+  @keyframes sizeTap {
+    0% { transform: scale(1); }
+    40% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+
+  .custom-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .custom-row input {
+    flex: 1;
+    min-width: 0;
+    border: 2px solid var(--pale);
+    background: var(--pale);
+    border-radius: 12px;
+    padding: 10px 6px;
+    font-size: 13px;
+    color: var(--deep);
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .custom-row input:focus {
+    outline: none;
+    border-color: var(--bright);
+  }
+
+  .custom-row input::placeholder {
+    color: #8fb3c4;
+    font-weight: 600;
+  }
+
+  /* Hide native number spinner arrows so the field stays compact */
+  .custom-row input::-webkit-outer-spin-button,
+  .custom-row input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .custom-row input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  .custom-add-btn {
+    flex: 1;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, var(--mid), var(--bright));
+    cursor: pointer;
+    transition: transform 0.1s ease;
+  }
+
+  .custom-add-btn:active {
+    transform: scale(0.95);
+  }
+
+  .goal-row {
+    font-size: 13px;
+    color: #6b8fa3;
+    margin-bottom: 22px;
+  }
+
+  .goal-row input {
+    width: 60px;
+    text-align: center;
+    border: none;
+    border-bottom: 2px solid var(--bright);
+    font-size: 13px;
+    color: var(--deep);
+    font-weight: 700;
+    background: transparent;
+  }
+
+  .goal-row input:focus { outline: none; }
+
+  .progress-track {
+    width: 100%;
+    height: 8px;
+    background: #e1f1f8;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 26px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--mid), var(--bright));
+    width: 0%;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .history {
+    margin-top: 24px;
+    text-align: left;
+  }
+
+  .history-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin-bottom: 10px;
+  }
+
+  .history-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .history-empty {
+    font-size: 12px;
+    color: #9db8c6;
+    padding: 8px 2px;
+  }
+
+  .history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--pale);
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: var(--deep);
+    animation: historyIn 0.25s ease;
+  }
+
+  @keyframes historyIn {
+    0% { opacity: 0; transform: translateY(-6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .history-item.removing {
+    animation: historyOut 0.25s ease forwards;
+  }
+
+  @keyframes historyOut {
+    0% { opacity: 1; transform: translateX(0); max-height: 40px; }
+    100% { opacity: 0; transform: translateX(12px); max-height: 0; padding-top: 0; padding-bottom: 0; margin: 0; }
+  }
+
+  .history-left {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .history-amount {
+    font-weight: 700;
+  }
+
+  .history-time {
+    font-size: 11px;
+    color: #6b8fa3;
+  }
+
+  .history-delete {
+    border: none;
+    background: transparent;
+    color: #6b8fa3;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 6px;
+    line-height: 1;
+    border-radius: 6px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .history-delete:hover {
+    background: #dcebf2;
+    color: var(--deep);
+  }
+
+  .reset-note {
+    margin-top: 18px;
+    font-size: 11px;
+    color: #9db8c6;
+  }
+
+  .status {
+    font-size: 11px;
+    color: #9db8c6;
+    margin-top: 6px;
+    min-height: 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Va vörðurinn</h1>
+  <div class="date" id="dateLabel">--</div>
+
+  <div class="drop-wrap" id="dropWrap">
+    <svg class="drop-bg" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+      <path d="M70 12 C70 12 30 62 30 92 C30 114.7 47.9 132 70 132 C92.1 132 110 114.7 110 92 C110 62 70 12 70 12 Z"
+            fill="#eaf7fc" stroke="#bfe4f2" stroke-width="2"/>
+    </svg>
+    <div class="count" id="countDisplay">0</div>
+    <div class="label">ml í dag</div>
+  </div>
+
+  <div class="size-row">
+    <button class="size-btn" data-ml="750" id="sizeBtn750">
+      <span class="size-ml">750 ml</span>Fla
+    </button>
+    <button class="size-btn" data-ml="500" id="sizeBtn500">
+      <span class="size-ml">500 ml</span>Fla
+    </button>
+    <button class="size-btn" data-ml="330" id="sizeBtn330">
+      <span class="size-ml">330 ml</span>Glas
+    </button>
+  </div>
+
+  <div class="custom-row">
+    <input type="number" id="customInput" min="1" step="1" placeholder="t.d. 250" />
+    <button class="custom-add-btn" id="customAddBtn">+ Bæta við</button>
+  </div>
+
+  <div class="goal-row">
+    Daglegt markmið: <input type="number" id="goalInput" min="50" step="50" value="2000" /> ml
+  </div>
+
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <div class="reset-note">Endurstillist daglega klukkan 00:00</div>
+  <div class="status" id="statusLine"></div>
+
+  <div class="history">
+    <div class="history-title">Skráningar í dag</div>
+    <ul class="history-list" id="historyList"></ul>
+  </div>
+</div>
+
+<script>
+(function () {
+  const countDisplay = document.getElementById('countDisplay');
+  const progressFill = document.getElementById('progressFill');
+  const dateLabel = document.getElementById('dateLabel');
+  const goalInput = document.getElementById('goalInput');
+  const statusLine = document.getElementById('statusLine');
+  const dropWrap = document.getElementById('dropWrap');
+  const customInput = document.getElementById('customInput');
+  const customAddBtn = document.getElementById('customAddBtn');
+  const historyList = document.getElementById('historyList');
+  const sizeButtons = {
+    750: document.getElementById('sizeBtn750'),
+    500: document.getElementById('sizeBtn500'),
+    330: document.getElementById('sizeBtn330')
+  };
+
+  const STORAGE_KEY = 'water-counter-state';
+
+  let state = { date: null, totalMl: 0, goalMl: 2000, selectedSize: 500, history: [] };
+  let storageReady = false;
+
+  function timeLabel(timestamp) {
+    const d = new Date(timestamp);
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return hh + ':' + mm;
+  }
+
+  function highlightSize() {
+    Object.keys(sizeButtons).forEach((ml) => {
+      sizeButtons[ml].classList.toggle('active', Number(ml) === state.selectedSize);
+    });
+  }
+
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  const ICELANDIC_WEEKDAYS = ['sunnudagur', 'mánudagur', 'þriðjudagur', 'miðvikudagur', 'fimmtudagur', 'föstudagur', 'laugardagur'];
+  const ICELANDIC_MONTHS = ['janúar', 'febrúar', 'mars', 'apríl', 'maí', 'júní', 'júlí', 'ágúst', 'september', 'október', 'nóvember', 'desember'];
+
+  function formatDisplayDate() {
+    const d = new Date();
+    const weekday = ICELANDIC_WEEKDAYS[d.getDay()];
+    const month = ICELANDIC_MONTHS[d.getMonth()];
+    const day = d.getDate();
+    const capitalizedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+    return capitalizedWeekday + ' ' + day + '. ' + month;
+  }
+
+  function renderHistory() {
+    historyList.innerHTML = '';
+    if (!state.history || state.history.length === 0) {
+      const empty = document.createElement('li');
+      empty.className = 'history-empty';
+      empty.textContent = 'Engar skráningar ennþá';
+      historyList.appendChild(empty);
+      return;
+    }
+    // Newest first
+    const ordered = state.history.slice().sort((a, b) => b.timestamp - a.timestamp);
+    ordered.forEach((entry) => {
+      const li = document.createElement('li');
+      li.className = 'history-item';
+      li.dataset.id = entry.id;
+
+      const left = document.createElement('div');
+      left.className = 'history-left';
+
+      const amount = document.createElement('span');
+      amount.className = 'history-amount';
+      amount.textContent = '+' + entry.amountMl + ' ml';
+
+      const time = document.createElement('span');
+      time.className = 'history-time';
+      time.textContent = timeLabel(entry.timestamp);
+
+      left.appendChild(amount);
+      left.appendChild(time);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'history-delete';
+      delBtn.setAttribute('aria-label', 'Eyða skráningu');
+      delBtn.textContent = '×';
+      delBtn.addEventListener('click', () => deleteHistoryEntry(entry.id));
+
+      li.appendChild(left);
+      li.appendChild(delBtn);
+      historyList.appendChild(li);
+    });
+  }
+
+  function deleteHistoryEntry(id) {
+    const entry = state.history.find((h) => h.id === id);
+    if (!entry) return;
+    const li = historyList.querySelector('[data-id="' + id + '"]');
+    const finish = () => {
+      state.history = state.history.filter((h) => h.id !== id);
+      state.totalMl = Math.max(0, state.totalMl - entry.amountMl);
+      render();
+      save();
+    };
+    if (li) {
+      li.classList.add('removing');
+      li.addEventListener('animationend', finish, { once: true });
+    } else {
+      finish();
+    }
+  }
+
+  function render() {
+    countDisplay.textContent = state.totalMl;
+    dateLabel.textContent = formatDisplayDate();
+    goalInput.value = state.goalMl;
+    const pct = state.goalMl > 0 ? Math.min(100, (state.totalMl / state.goalMl) * 100) : 0;
+    progressFill.style.width = pct + '%';
+    highlightSize();
+    renderHistory();
+  }
+
+  // --- Animation helpers -------------------------------------------------
+
+  function playAddAnimation(amountMl, sourceButton) {
+    // Bounce the drop icon
+    dropWrap.classList.remove('pulse');
+    // Force reflow so the animation can restart if triggered rapidly
+    void dropWrap.offsetWidth;
+    dropWrap.classList.add('pulse');
+
+    // Bounce the number itself
+    countDisplay.classList.remove('bump');
+    void countDisplay.offsetWidth;
+    countDisplay.classList.add('bump');
+
+    // Expanding ripple behind the drop
+    const ripple = document.createElement('div');
+    ripple.className = 'ripple';
+    dropWrap.appendChild(ripple);
+    ripple.addEventListener('animationend', () => ripple.remove());
+
+    // Floating "+750 ml" text rising out of the drop
+    const floatEl = document.createElement('div');
+    floatEl.className = 'float-plus';
+    floatEl.textContent = '+' + amountMl + ' ml';
+    dropWrap.appendChild(floatEl);
+    floatEl.addEventListener('animationend', () => floatEl.remove());
+
+    // Quick squash on the tapped size button
+    if (sourceButton) {
+      sourceButton.classList.remove('tapped');
+      void sourceButton.offsetWidth;
+      sourceButton.classList.add('tapped');
+    }
+  }
+
+  const hasClaudeStorage = (typeof window !== 'undefined' && window.storage && typeof window.storage.set === 'function');
+  let hasLocalStorage = false;
+  try {
+    const testKey = '__water_counter_test__';
+    window.localStorage.setItem(testKey, '1');
+    window.localStorage.removeItem(testKey);
+    hasLocalStorage = true;
+  } catch (e) {
+    hasLocalStorage = false;
+  }
+
+  async function storageGet(key) {
+    if (hasClaudeStorage) {
+      return await window.storage.get(key, false);
+    }
+    if (hasLocalStorage) {
+      const raw = window.localStorage.getItem(key);
+      return raw ? { key, value: raw, shared: false } : null;
+    }
+    return null;
+  }
+
+  async function storageSet(key, value) {
+    if (hasClaudeStorage) {
+      return await window.storage.set(key, value, false);
+    }
+    if (hasLocalStorage) {
+      window.localStorage.setItem(key, value);
+      return { key, value, shared: false };
+    }
+    throw new Error('No storage available');
+  }
+
+  async function save() {
+    if (!storageReady) return;
+    try {
+      await storageSet(STORAGE_KEY, JSON.stringify(state));
+      statusLine.textContent = '';
+    } catch (e) {
+      statusLine.textContent = 'Could not save progress.';
+    }
+  }
+
+  function checkForNewDay() {
+    const key = todayKey();
+    if (state.date !== key) {
+      state.date = key;
+      state.totalMl = 0;
+      state.history = [];
+      render();
+      save();
+    }
+  }
+
+  async function load() {
+    if (!hasClaudeStorage && !hasLocalStorage) {
+      storageReady = false;
+      checkForNewDay();
+      render();
+      statusLine.textContent = 'Your browser is blocking storage, so progress won\'t be saved here.';
+      return;
+    }
+    try {
+      const result = await storageGet(STORAGE_KEY);
+      if (result && result.value) {
+        const parsed = JSON.parse(result.value);
+        state.date = parsed.date || null;
+        state.totalMl = typeof parsed.totalMl === 'number' ? parsed.totalMl : 0;
+        state.goalMl = typeof parsed.goalMl === 'number' ? parsed.goalMl : 2000;
+        state.selectedSize = typeof parsed.selectedSize === 'number' ? parsed.selectedSize : 500;
+        state.history = Array.isArray(parsed.history) ? parsed.history : [];
+      }
+    } catch (e) {
+      // no existing data yet, that's fine
+    } finally {
+      storageReady = true;
+      checkForNewDay();
+      render();
+    }
+  }
+
+  function logHistoryEntry(amountMl) {
+    if (!Array.isArray(state.history)) state.history = [];
+    state.history.push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      amountMl: amountMl,
+      timestamp: Date.now()
+    });
+  }
+
+  goalInput.addEventListener('change', () => {
+    const val = parseInt(goalInput.value, 10);
+    state.goalMl = (!isNaN(val) && val > 0) ? val : 2000;
+    render();
+    save();
+  });
+
+  Object.keys(sizeButtons).forEach((ml) => {
+    sizeButtons[ml].addEventListener('click', () => {
+      checkForNewDay();
+      state.selectedSize = Number(ml);
+      state.totalMl += state.selectedSize;
+      logHistoryEntry(state.selectedSize);
+      render();
+      save();
+      playAddAnimation(state.selectedSize, sizeButtons[ml]);
+    });
+  });
+
+  function addCustomAmount() {
+    const val = parseInt(customInput.value, 10);
+    if (!val || val <= 0) {
+      customInput.focus();
+      return;
+    }
+    checkForNewDay();
+    state.totalMl += val;
+    logHistoryEntry(val);
+    render();
+    save();
+    playAddAnimation(val, customAddBtn);
+    customInput.value = '';
+  }
+
+  customAddBtn.addEventListener('click', addCustomAmount);
+
+  customInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addCustomAmount();
+    }
+  });
+
+  // Check periodically so the page resets right after midnight even if left open
+  setInterval(checkForNewDay, 30 * 1000);
+
+  load();
+})();
+</script>
+
+</body>
+</html>
