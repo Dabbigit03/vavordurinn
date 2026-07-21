@@ -802,7 +802,7 @@
   </div>
 
   <div class="logout-row">
-    <button class="logout-link" id="logoutBtn">Skrá út</button>
+    <button class="logout-link" id="logoutBtn">Ekki þú? Skrá út</button>
   </div>
 </div>
 
@@ -1190,6 +1190,10 @@
       } else {
         localStorage.removeItem(AUTH_STORAGE_KEY);
       }
+
+      // Set this immediately so an early tap can't overwrite the real PIN
+      // with the default empty value before the Firestore listener catches up.
+      state.pin = pin;
 
       startSession(uid);
     } catch (e) {
