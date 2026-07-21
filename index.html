@@ -271,7 +271,6 @@
     font-weight: 600;
   }
 
-  /* Hide native number spinner arrows so the field stays compact */
   .custom-row input::-webkit-outer-spin-button,
   .custom-row input::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -440,6 +439,130 @@
 
   .sync-dot.online { background: #3fb8e0; }
 
+  .logout-row {
+    margin-top: 14px;
+  }
+
+  .logout-link {
+    border: none;
+    background: none;
+    color: #6b8fa3;
+    font-size: 11px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .user-badge {
+    font-size: 11px;
+    color: var(--mid);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  /* --- Login screen --- */
+
+  .login-card {
+    background: var(--paper);
+    border-radius: 24px;
+    padding: 36px 32px;
+    width: 100%;
+    max-width: 340px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(11, 61, 92, 0.15);
+  }
+
+  .login-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--deep);
+    margin-bottom: 4px;
+  }
+
+  .login-subtitle {
+    font-size: 13px;
+    color: #6b8fa3;
+    margin-bottom: 24px;
+  }
+
+  .login-field {
+    margin-bottom: 14px;
+    text-align: left;
+  }
+
+  .login-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin-bottom: 6px;
+  }
+
+  .login-field input {
+    width: 100%;
+    border: 2px solid var(--pale);
+    background: var(--pale);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--deep);
+  }
+
+  .login-field input:focus {
+    outline: none;
+    border-color: var(--bright);
+  }
+
+  .remember-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #6b8fa3;
+    margin: 16px 0 20px;
+    text-align: left;
+  }
+
+  .remember-row input {
+    width: 16px;
+    height: 16px;
+  }
+
+  .login-btn {
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(135deg, var(--mid), var(--bright));
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(63, 184, 224, 0.4);
+    transition: transform 0.1s ease;
+  }
+
+  .login-btn:active {
+    transform: scale(0.97);
+  }
+
+  .login-error {
+    color: #d9534f;
+    font-size: 12px;
+    margin-top: 12px;
+    min-height: 16px;
+  }
+
+  .login-note {
+    font-size: 11px;
+    color: #9db8c6;
+    margin-top: 18px;
+    line-height: 1.5;
+  }
+
   /* --- Settings modal --- */
 
   .modal-overlay {
@@ -606,7 +729,31 @@
 </head>
 <body>
 
-<div class="card">
+<div class="login-card" id="loginScreen">
+  <div class="login-title">Va vörðurinn</div>
+  <div class="login-subtitle">Skráðu þig inn til að byrja</div>
+
+  <div class="login-field">
+    <label for="loginUsername">Notandanafn</label>
+    <input type="text" id="loginUsername" placeholder="t.d. Aquaman" autocomplete="off" />
+  </div>
+
+  <div class="login-field">
+    <label for="loginPin">PIN-númer</label>
+    <input type="password" id="loginPin" placeholder="t.d. 6767" inputmode="numeric" autocomplete="off" />
+  </div>
+
+  <div class="remember-row">
+    <input type="checkbox" id="rememberMe" checked />
+    <label for="rememberMe">Muna innskráningu á þessu tæki</label>
+  </div>
+
+  <button class="login-btn" id="loginBtn">Halda áfram</button>
+  <div class="login-error" id="loginError"></div>
+  <div class="login-note">Nýtt notandanafn býr sjálfkrafa til nýjan aðgang með því PIN-númeri.</div>
+</div>
+
+<div class="card" id="appCard" style="display: none;">
   <div class="header-row">
     <h1>Va vörðurinn</h1>
     <button class="settings-btn" id="settingsBtn" aria-label="Stillingar">
@@ -616,6 +763,7 @@
       </svg>
     </button>
   </div>
+  <div class="user-badge" id="userBadge"></div>
   <div class="date" id="dateLabel">--</div>
 
   <div class="drop-wrap" id="dropWrap">
@@ -646,6 +794,10 @@
   <div class="history">
     <div class="history-title">Skráningar í dag</div>
     <ul class="history-list" id="historyList"></ul>
+  </div>
+
+  <div class="logout-row">
+    <button class="logout-link" id="logoutBtn">Skrá út</button>
   </div>
 </div>
 
@@ -682,7 +834,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBZA7legVCOZvbAsCPmE5szRaJwjResd58",
@@ -695,7 +847,24 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const stateDocRef = doc(db, "waterCounter", "sharedState");
+
+  const AUTH_STORAGE_KEY = 'waterCounterAuth';
+  const DEFAULT_SIZES = [
+    { ml: 750, name: 'Fla' },
+    { ml: 500, name: 'Fla' },
+    { ml: 330, name: 'Glas' }
+  ];
+
+  // --- DOM refs ---
+  const loginScreen = document.getElementById('loginScreen');
+  const appCard = document.getElementById('appCard');
+  const loginUsername = document.getElementById('loginUsername');
+  const loginPin = document.getElementById('loginPin');
+  const rememberMe = document.getElementById('rememberMe');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginError = document.getElementById('loginError');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const userBadge = document.getElementById('userBadge');
 
   const countDisplay = document.getElementById('countDisplay');
   const progressFill = document.getElementById('progressFill');
@@ -720,15 +889,17 @@
     { ml: document.getElementById('sizeMl2'), name: document.getElementById('sizeName2') }
   ];
 
-  const DEFAULT_SIZES = [
-    { ml: 750, name: 'Fla' },
-    { ml: 500, name: 'Fla' },
-    { ml: 330, name: 'Glas' }
-  ];
-
-  let state = { date: null, totalMl: 0, goalMl: 2000, selectedSize: 500, history: [], sizes: DEFAULT_SIZES };
+  // --- App state (per logged-in user) ---
+  let state = { pin: '', date: null, totalMl: 0, goalMl: 2000, selectedSize: 500, history: [], sizes: DEFAULT_SIZES };
   let initialized = false;
   let sizeButtonEls = [];
+  let userId = null;
+  let stateDocRef = null;
+  let unsubscribeSnapshot = null;
+
+  function sanitizeUsername(raw) {
+    return raw.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  }
 
   function timeLabel(timestamp) {
     const d = new Date(timestamp);
@@ -859,6 +1030,7 @@
     renderSizeButtons();
     highlightSize();
     renderHistory();
+    userBadge.textContent = userId ? ('Innskráð(ur) sem ' + userId) : '';
   }
 
   function playAddAnimation(amountMl, sourceButton) {
@@ -903,6 +1075,7 @@
   }
 
   async function save() {
+    if (!stateDocRef) return;
     try {
       await setDoc(stateDocRef, state);
       setStatus('Samstillt', true);
@@ -912,6 +1085,7 @@
   }
 
   function applyRemoteState(data) {
+    state.pin = data.pin || state.pin;
     state.date = data.date || null;
     state.totalMl = typeof data.totalMl === 'number' ? data.totalMl : 0;
     state.goalMl = typeof data.goalMl === 'number' ? data.goalMl : 2000;
@@ -931,26 +1105,115 @@
     }
   }
 
-  onSnapshot(stateDocRef, (snapshot) => {
-    if (snapshot.exists()) {
-      applyRemoteState(snapshot.data());
-    }
-    if (!initialized) {
-      initialized = true;
-      checkForNewDay();
-      render();
-      if (!snapshot.exists()) {
-        save();
+  function startSession(uid) {
+    userId = uid;
+    stateDocRef = doc(db, 'waterUsers', uid);
+    initialized = false;
+
+    loginScreen.style.display = 'none';
+    appCard.style.display = 'block';
+
+    if (unsubscribeSnapshot) unsubscribeSnapshot();
+    unsubscribeSnapshot = onSnapshot(stateDocRef, (snapshot) => {
+      if (snapshot.exists()) {
+        applyRemoteState(snapshot.data());
+      }
+      if (!initialized) {
+        initialized = true;
+        checkForNewDay();
+        render();
+        setStatus('Samstillt', true);
       } else {
+        render();
         setStatus('Samstillt', true);
       }
-    } else {
-      render();
-      setStatus('Samstillt', true);
+    }, () => {
+      setStatus('Ótengt — athugaðu nettengingu', false);
+    });
+  }
+
+  function endSession() {
+    if (unsubscribeSnapshot) unsubscribeSnapshot();
+    unsubscribeSnapshot = null;
+    userId = null;
+    stateDocRef = null;
+    state = { pin: '', date: null, totalMl: 0, goalMl: 2000, selectedSize: 500, history: [], sizes: DEFAULT_SIZES };
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    appCard.style.display = 'none';
+    loginScreen.style.display = 'block';
+    loginUsername.value = '';
+    loginPin.value = '';
+    loginError.textContent = '';
+  }
+
+  function showLoginError(msg) {
+    loginError.textContent = msg;
+  }
+
+  async function attemptLogin(rawUsername, pin, remember) {
+    const uid = sanitizeUsername(rawUsername || '');
+    if (!uid) {
+      showLoginError('Sláðu inn notandanafn (aðeins bókstafir og tölustafir).');
+      return;
     }
-  }, (error) => {
-    setStatus('Ótengt — athugaðu nettengingu', false);
+    if (!pin) {
+      showLoginError('Sláðu inn PIN-númer.');
+      return;
+    }
+    loginError.textContent = '';
+    const ref = doc(db, 'waterUsers', uid);
+    try {
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.pin !== pin) {
+          showLoginError('Rangt PIN-númer fyrir þetta notandanafn.');
+          return;
+        }
+      } else {
+        const freshState = { pin: pin, date: null, totalMl: 0, goalMl: 2000, selectedSize: 500, history: [], sizes: DEFAULT_SIZES };
+        await setDoc(ref, freshState);
+      }
+
+      if (remember) {
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ username: uid, pin: pin }));
+      } else {
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+      }
+
+      startSession(uid);
+    } catch (e) {
+      showLoginError('Tengivilla — athugaðu nettengingu og reyndu aftur.');
+    }
+  }
+
+  loginBtn.addEventListener('click', () => {
+    attemptLogin(loginUsername.value, loginPin.value, rememberMe.checked);
   });
+
+  loginPin.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      attemptLogin(loginUsername.value, loginPin.value, rememberMe.checked);
+    }
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    endSession();
+  });
+
+  // Auto-login if a saved session exists on this device
+  (function tryAutoLogin() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || 'null');
+      if (saved && saved.username && saved.pin) {
+        loginUsername.value = saved.username;
+        attemptLogin(saved.username, saved.pin, true);
+      }
+    } catch (e) {
+      // ignore malformed saved data
+    }
+  })();
 
   function addCustomAmount() {
     const val = parseInt(customInput.value, 10);
