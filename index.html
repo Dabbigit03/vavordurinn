@@ -1078,9 +1078,9 @@
     if (!stateDocRef) return;
     try {
       await setDoc(stateDocRef, state);
-      setStatus('Samstillt', true);
+      setStatus('Vistað', true);
     } catch (e) {
-      setStatus('Ekki tókst að vista — athugaðu nettengingu', false);
+      setStatus('Náði ekki að vista — athugaðu nettengingu', false);
     }
   }
 
