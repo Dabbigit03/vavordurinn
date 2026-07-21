@@ -422,9 +422,14 @@
 
   .status {
     font-size: 11px;
-    color: #9db8c6;
+    color: #d9534f;
     margin-top: 6px;
     min-height: 14px;
+    display: none;
+  }
+
+  .status.visible {
+    display: block;
   }
 
   .sync-dot {
@@ -735,12 +740,12 @@
 
   <div class="login-field">
     <label for="loginUsername">Notandanafn</label>
-    <input type="text" id="loginUsername" placeholder="t.d. Aquaman" autocomplete="off" />
+    <input type="text" id="loginUsername" placeholder="t.d. dagbjartur" autocomplete="off" />
   </div>
 
   <div class="login-field">
     <label for="loginPin">PIN-númer</label>
-    <input type="password" id="loginPin" placeholder="t.d. 6767" inputmode="numeric" autocomplete="off" />
+    <input type="password" id="loginPin" placeholder="t.d. 1234" inputmode="numeric" autocomplete="off" />
   </div>
 
   <div class="remember-row">
@@ -789,7 +794,7 @@
   </div>
 
   <div class="reset-note">Endurstillist daglega klukkan 00:00</div>
-  <div class="status" id="statusLine"><span class="sync-dot" id="syncDot"></span><span id="statusText">Tengist...</span></div>
+  <div class="status" id="statusLine"><span id="statusText"></span></div>
 
   <div class="history">
     <div class="history-title">Skráningar í dag</div>
@@ -797,7 +802,7 @@
   </div>
 
   <div class="logout-row">
-    <button class="logout-link" id="logoutBtn">Skrá út</button>
+    <button class="logout-link" id="logoutBtn">Ekki þú? Skrá út</button>
   </div>
 </div>
 
@@ -871,7 +876,7 @@
   const dateLabel = document.getElementById('dateLabel');
   const goalDisplay = document.getElementById('goalDisplay');
   const statusText = document.getElementById('statusText');
-  const syncDot = document.getElementById('syncDot');
+  const statusLine = document.getElementById('statusLine');
   const dropWrap = document.getElementById('dropWrap');
   const customInput = document.getElementById('customInput');
   const customAddBtn = document.getElementById('customAddBtn');
@@ -1070,17 +1075,22 @@
   }
 
   function setStatus(text, online) {
-    statusText.textContent = text;
-    syncDot.classList.toggle('online', !!online);
+    if (online) {
+      statusText.textContent = '';
+      statusLine.classList.remove('visible');
+    } else {
+      statusText.textContent = text;
+      statusLine.classList.add('visible');
+    }
   }
 
   async function save() {
     if (!stateDocRef) return;
     try {
       await setDoc(stateDocRef, state);
-      setStatus('Vistað', true);
+      setStatus('Samstillt', true);
     } catch (e) {
-      setStatus('Náði ekki að vista — athugaðu nettengingu', false);
+      setStatus('Ekki tókst að vista — athugaðu nettengingu', false);
     }
   }
 
@@ -1122,10 +1132,10 @@
         initialized = true;
         checkForNewDay();
         render();
-        setStatus('Vistað', true);
+        setStatus('Samstillt', true);
       } else {
         render();
-        setStatus('Vistað', true);
+        setStatus('Samstillt', true);
       }
     }, () => {
       setStatus('Ótengt — athugaðu nettengingu', false);
