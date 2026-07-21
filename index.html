@@ -51,6 +51,43 @@
     opacity: 0.35;
   }
 
+  .header-row {
+    position: relative;
+    z-index: 4;
+  }
+
+  .settings-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: var(--pale);
+    color: var(--mid);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, background 0.15s ease;
+    z-index: 5;
+  }
+
+  .settings-btn:hover {
+    background: #dcebf2;
+  }
+
+  .settings-btn:active {
+    transform: scale(0.92);
+  }
+
+  .settings-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
   h1 {
     font-size: 15px;
     letter-spacing: 0.14em;
@@ -261,24 +298,16 @@
     transform: scale(0.95);
   }
 
-  .goal-row {
+  .goal-display {
     font-size: 13px;
     color: #6b8fa3;
     margin-bottom: 22px;
   }
 
-  .goal-row input {
-    width: 60px;
-    text-align: center;
-    border: none;
-    border-bottom: 2px solid var(--bright);
-    font-size: 13px;
+  .goal-display strong {
     color: var(--deep);
     font-weight: 700;
-    background: transparent;
   }
-
-  .goal-row input:focus { outline: none; }
 
   .progress-track {
     width: 100%;
@@ -410,12 +439,183 @@
   }
 
   .sync-dot.online { background: #3fb8e0; }
+
+  /* --- Settings modal --- */
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 61, 92, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    padding: 20px;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-box {
+    background: var(--paper);
+    border-radius: 20px;
+    padding: 26px 22px;
+    width: 100%;
+    max-width: 340px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(11, 61, 92, 0.35);
+    text-align: left;
+    transform: translateY(10px);
+    transition: transform 0.2s ease;
+  }
+
+  .modal-overlay.open .modal-box {
+    transform: translateY(0);
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--deep);
+    margin-bottom: 4px;
+    text-align: center;
+  }
+
+  .modal-subtitle {
+    font-size: 12px;
+    color: #6b8fa3;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+
+  .modal-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin: 0 0 10px;
+  }
+
+  .settings-size-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+
+  .settings-size-row input[type="number"] {
+    width: 70px;
+    flex: 0 0 70px;
+    border: 2px solid var(--pale);
+    background: var(--pale);
+    border-radius: 10px;
+    padding: 8px 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--deep);
+    text-align: center;
+  }
+
+  .settings-size-row input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    border: 2px solid var(--pale);
+    background: var(--pale);
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--deep);
+  }
+
+  .settings-size-row input:focus {
+    outline: none;
+    border-color: var(--bright);
+  }
+
+  .settings-goal-row {
+    margin-top: 20px;
+    margin-bottom: 6px;
+  }
+
+  .settings-goal-row label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin-bottom: 8px;
+  }
+
+  .settings-goal-row input {
+    width: 100%;
+    border: 2px solid var(--pale);
+    background: var(--pale);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--deep);
+    text-align: center;
+  }
+
+  .settings-goal-row input:focus {
+    outline: none;
+    border-color: var(--bright);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 22px;
+  }
+
+  .modal-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+  }
+
+  .modal-btn:active {
+    transform: scale(0.96);
+  }
+
+  .modal-btn.save {
+    background: linear-gradient(135deg, var(--mid), var(--bright));
+    color: white;
+  }
+
+  .modal-btn.cancel {
+    background: var(--pale);
+    color: var(--mid);
+  }
 </style>
 </head>
 <body>
 
 <div class="card">
-  <h1>Va vörðurinn</h1>
+  <div class="header-row">
+    <h1>Va vörðurinn</h1>
+    <button class="settings-btn" id="settingsBtn" aria-label="Stillingar">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 15.5C13.933 15.5 15.5 13.933 15.5 12C15.5 10.067 13.933 8.5 12 8.5C10.067 8.5 8.5 10.067 8.5 12C8.5 13.933 10.067 15.5 12 15.5Z" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M19.4 13.5C19.47 13.01 19.5 12.51 19.5 12C19.5 11.49 19.47 10.99 19.4 10.5L21.32 9.02C21.5 8.88 21.55 8.63 21.43 8.43L19.63 5.32C19.51 5.12 19.27 5.04 19.06 5.12L16.82 6.01C16.36 5.65 15.86 5.35 15.32 5.13L14.98 2.75C14.95 2.53 14.76 2.37 14.54 2.37H9.46C9.24 2.37 9.05 2.53 9.02 2.75L8.68 5.13C8.14 5.35 7.64 5.66 7.18 6.01L4.94 5.12C4.73 5.04 4.49 5.12 4.37 5.32L2.57 8.43C2.45 8.63 2.5 8.88 2.68 9.02L4.6 10.5C4.53 10.99 4.5 11.5 4.5 12C4.5 12.5 4.53 13.01 4.6 13.5L2.68 14.98C2.5 15.12 2.45 15.37 2.57 15.57L4.37 18.68C4.49 18.88 4.73 18.96 4.94 18.88L7.18 17.99C7.64 18.35 8.14 18.65 8.68 18.87L9.02 21.25C9.05 21.47 9.24 21.63 9.46 21.63H14.54C14.76 21.63 14.95 21.47 14.98 21.25L15.32 18.87C15.86 18.65 16.36 18.34 16.82 17.99L19.06 18.88C19.27 18.96 19.51 18.88 19.63 18.68L21.43 15.57C21.55 15.37 21.5 15.12 21.32 14.98L19.4 13.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
   <div class="date" id="dateLabel">--</div>
 
   <div class="drop-wrap" id="dropWrap">
@@ -427,26 +627,14 @@
     <div class="label">ml í dag</div>
   </div>
 
-  <div class="size-row">
-    <button class="size-btn" data-ml="750" id="sizeBtn750">
-      <span class="size-ml">750 ml</span>Fla
-    </button>
-    <button class="size-btn" data-ml="500" id="sizeBtn500">
-      <span class="size-ml">500 ml</span>Fla
-    </button>
-    <button class="size-btn" data-ml="330" id="sizeBtn330">
-      <span class="size-ml">330 ml</span>Glas
-    </button>
-  </div>
+  <div class="size-row" id="sizeRow"></div>
 
   <div class="custom-row">
     <input type="number" id="customInput" min="1" step="1" placeholder="t.d. 250" />
     <button class="custom-add-btn" id="customAddBtn">+ Bæta við</button>
   </div>
 
-  <div class="goal-row">
-    Daglegt markmið: <input type="number" id="goalInput" min="50" step="50" value="2000" /> ml
-  </div>
+  <div class="goal-display">Daglegt markmið: <strong id="goalDisplay">2000</strong> ml</div>
 
   <div class="progress-track">
     <div class="progress-fill" id="progressFill"></div>
@@ -458,6 +646,37 @@
   <div class="history">
     <div class="history-title">Skráningar í dag</div>
     <ul class="history-list" id="historyList"></ul>
+  </div>
+</div>
+
+<div class="modal-overlay" id="settingsOverlay">
+  <div class="modal-box">
+    <div class="modal-title">Stillingar</div>
+    <div class="modal-subtitle">Sérsniðnir skammtar og markmið</div>
+
+    <div class="modal-section-title">Skammtar (allt að 3)</div>
+    <div class="settings-size-row">
+      <input type="number" id="sizeMl0" min="1" placeholder="ml" />
+      <input type="text" id="sizeName0" placeholder="Heiti (t.d. Fla)" />
+    </div>
+    <div class="settings-size-row">
+      <input type="number" id="sizeMl1" min="1" placeholder="ml" />
+      <input type="text" id="sizeName1" placeholder="Heiti (t.d. Fla)" />
+    </div>
+    <div class="settings-size-row">
+      <input type="number" id="sizeMl2" min="1" placeholder="ml" />
+      <input type="text" id="sizeName2" placeholder="Heiti (t.d. Glas)" />
+    </div>
+
+    <div class="settings-goal-row">
+      <label for="settingsGoalInput">Daglegt markmið (ml)</label>
+      <input type="number" id="settingsGoalInput" min="50" step="50" />
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" id="settingsCancelBtn">Hætta við</button>
+      <button class="modal-btn save" id="settingsSaveBtn">Vista</button>
+    </div>
   </div>
 </div>
 
@@ -481,21 +700,35 @@
   const countDisplay = document.getElementById('countDisplay');
   const progressFill = document.getElementById('progressFill');
   const dateLabel = document.getElementById('dateLabel');
-  const goalInput = document.getElementById('goalInput');
+  const goalDisplay = document.getElementById('goalDisplay');
   const statusText = document.getElementById('statusText');
   const syncDot = document.getElementById('syncDot');
   const dropWrap = document.getElementById('dropWrap');
   const customInput = document.getElementById('customInput');
   const customAddBtn = document.getElementById('customAddBtn');
   const historyList = document.getElementById('historyList');
-  const sizeButtons = {
-    750: document.getElementById('sizeBtn750'),
-    500: document.getElementById('sizeBtn500'),
-    330: document.getElementById('sizeBtn330')
-  };
+  const sizeRow = document.getElementById('sizeRow');
 
-  let state = { date: null, totalMl: 0, goalMl: 2000, selectedSize: 500, history: [] };
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsOverlay = document.getElementById('settingsOverlay');
+  const settingsCancelBtn = document.getElementById('settingsCancelBtn');
+  const settingsSaveBtn = document.getElementById('settingsSaveBtn');
+  const settingsGoalInput = document.getElementById('settingsGoalInput');
+  const sizeInputs = [
+    { ml: document.getElementById('sizeMl0'), name: document.getElementById('sizeName0') },
+    { ml: document.getElementById('sizeMl1'), name: document.getElementById('sizeName1') },
+    { ml: document.getElementById('sizeMl2'), name: document.getElementById('sizeName2') }
+  ];
+
+  const DEFAULT_SIZES = [
+    { ml: 750, name: 'Fla' },
+    { ml: 500, name: 'Fla' },
+    { ml: 330, name: 'Glas' }
+  ];
+
+  let state = { date: null, totalMl: 0, goalMl: 2000, selectedSize: 500, history: [], sizes: DEFAULT_SIZES };
   let initialized = false;
+  let sizeButtonEls = [];
 
   function timeLabel(timestamp) {
     const d = new Date(timestamp);
@@ -505,8 +738,8 @@
   }
 
   function highlightSize() {
-    Object.keys(sizeButtons).forEach((ml) => {
-      sizeButtons[ml].classList.toggle('active', Number(ml) === state.selectedSize);
+    sizeButtonEls.forEach((btn) => {
+      btn.classList.toggle('active', Number(btn.dataset.ml) === state.selectedSize);
     });
   }
 
@@ -525,6 +758,37 @@
     const day = d.getDate();
     const capitalizedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
     return capitalizedWeekday + ' ' + day + '. ' + month;
+  }
+
+  function renderSizeButtons() {
+    sizeRow.innerHTML = '';
+    sizeButtonEls = [];
+    const sizes = Array.isArray(state.sizes) && state.sizes.length > 0 ? state.sizes : DEFAULT_SIZES;
+    sizes.slice(0, 3).forEach((size) => {
+      if (!size || !size.ml || size.ml <= 0) return;
+      const btn = document.createElement('button');
+      btn.className = 'size-btn';
+      btn.dataset.ml = size.ml;
+
+      const mlSpan = document.createElement('span');
+      mlSpan.className = 'size-ml';
+      mlSpan.textContent = size.ml + ' ml';
+      btn.appendChild(mlSpan);
+      btn.appendChild(document.createTextNode(size.name || 'Ílát'));
+
+      btn.addEventListener('click', () => {
+        checkForNewDay();
+        state.selectedSize = size.ml;
+        state.totalMl += size.ml;
+        logHistoryEntry(size.ml);
+        render();
+        save();
+        playAddAnimation(size.ml, btn);
+      });
+
+      sizeRow.appendChild(btn);
+      sizeButtonEls.push(btn);
+    });
   }
 
   function renderHistory() {
@@ -589,9 +853,10 @@
   function render() {
     countDisplay.textContent = state.totalMl;
     dateLabel.textContent = formatDisplayDate();
-    goalInput.value = state.goalMl;
+    goalDisplay.textContent = state.goalMl;
     const pct = state.goalMl > 0 ? Math.min(100, (state.totalMl / state.goalMl) * 100) : 0;
     progressFill.style.width = pct + '%';
+    renderSizeButtons();
     highlightSize();
     renderHistory();
   }
@@ -652,6 +917,7 @@
     state.goalMl = typeof data.goalMl === 'number' ? data.goalMl : 2000;
     state.selectedSize = typeof data.selectedSize === 'number' ? data.selectedSize : 500;
     state.history = Array.isArray(data.history) ? data.history : [];
+    state.sizes = Array.isArray(data.sizes) && data.sizes.length > 0 ? data.sizes : DEFAULT_SIZES;
   }
 
   function checkForNewDay() {
@@ -686,25 +952,6 @@
     setStatus('Ótengt — athugaðu nettengingu', false);
   });
 
-  goalInput.addEventListener('change', () => {
-    const val = parseInt(goalInput.value, 10);
-    state.goalMl = (!isNaN(val) && val > 0) ? val : 2000;
-    render();
-    save();
-  });
-
-  Object.keys(sizeButtons).forEach((ml) => {
-    sizeButtons[ml].addEventListener('click', () => {
-      checkForNewDay();
-      state.selectedSize = Number(ml);
-      state.totalMl += state.selectedSize;
-      logHistoryEntry(state.selectedSize);
-      render();
-      save();
-      playAddAnimation(state.selectedSize, sizeButtons[ml]);
-    });
-  });
-
   function addCustomAmount() {
     const val = parseInt(customInput.value, 10);
     if (!val || val <= 0) {
@@ -727,6 +974,50 @@
       e.preventDefault();
       addCustomAmount();
     }
+  });
+
+  // --- Settings modal ---
+
+  function openSettings() {
+    const sizes = Array.isArray(state.sizes) && state.sizes.length > 0 ? state.sizes : DEFAULT_SIZES;
+    sizeInputs.forEach((inputs, i) => {
+      const size = sizes[i];
+      inputs.ml.value = size ? size.ml : '';
+      inputs.name.value = size ? (size.name || '') : '';
+    });
+    settingsGoalInput.value = state.goalMl;
+    settingsOverlay.classList.add('open');
+  }
+
+  function closeSettings() {
+    settingsOverlay.classList.remove('open');
+  }
+
+  settingsBtn.addEventListener('click', openSettings);
+  settingsCancelBtn.addEventListener('click', closeSettings);
+
+  settingsOverlay.addEventListener('click', (e) => {
+    if (e.target === settingsOverlay) closeSettings();
+  });
+
+  settingsSaveBtn.addEventListener('click', () => {
+    const newSizes = sizeInputs
+      .map((inputs) => {
+        const ml = parseInt(inputs.ml.value, 10);
+        const name = inputs.name.value.trim();
+        if (!ml || ml <= 0) return null;
+        return { ml: ml, name: name || 'Ílát' };
+      })
+      .filter(Boolean);
+
+    state.sizes = newSizes.length > 0 ? newSizes : DEFAULT_SIZES;
+
+    const goalVal = parseInt(settingsGoalInput.value, 10);
+    state.goalMl = (!isNaN(goalVal) && goalVal > 0) ? goalVal : state.goalMl;
+
+    render();
+    save();
+    closeSettings();
   });
 
   setInterval(checkForNewDay, 30 * 1000);
