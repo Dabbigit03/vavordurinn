@@ -863,12 +863,12 @@
 
   <div class="login-field">
     <label for="loginUsername">Notandanafn</label>
-    <input type="text" id="loginUsername" placeholder="t.d. dagbjartur" autocomplete="off" />
+    <input type="text" id="loginUsername" placeholder="t.d. Aquaman" autocomplete="off" />
   </div>
 
   <div class="login-field">
     <label for="loginPin">PIN-númer</label>
-    <input type="password" id="loginPin" placeholder="t.d. 1234" inputmode="numeric" autocomplete="off" />
+    <input type="password" id="loginPin" placeholder="t.d. 6767" inputmode="numeric" autocomplete="off" />
   </div>
 
   <div class="remember-row">
@@ -1418,6 +1418,7 @@
     stateDocRef = null;
     state = { pin: '', date: null, totalMl: 0, goalMl: 2000, selectedSize: 500, history: [], sizes: DEFAULT_SIZES, todos: [], celebratedDate: null };
     localStorage.removeItem(AUTH_STORAGE_KEY);
+    closeSettings();
     appCard.style.display = 'none';
     loginScreen.style.display = 'block';
     loginUsername.value = '';
