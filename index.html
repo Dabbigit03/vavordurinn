@@ -445,7 +445,10 @@
   .sync-dot.online { background: #3fb8e0; }
 
   .logout-row {
-    margin-top: 14px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--pale);
+    text-align: center;
   }
 
   .logout-link {
@@ -620,6 +623,126 @@
     color: #6b8fa3;
     text-align: center;
     margin-bottom: 18px;
+  }
+
+  .confetti-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 2000;
+  }
+
+  .todos {
+    margin-top: 22px;
+    text-align: left;
+  }
+
+  .todo-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--pale);
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+
+  .todo-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    accent-color: var(--mid);
+    cursor: pointer;
+  }
+
+  .todo-item input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--deep);
+    padding: 2px 0;
+  }
+
+  .todo-item input[type="text"]:focus {
+    outline: none;
+  }
+
+  .todo-item.done input[type="text"] {
+    text-decoration: line-through;
+    color: #9db8c6;
+  }
+
+  .settings-todo-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+
+  .settings-todo-row input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    border: 2px solid var(--pale);
+    background: var(--pale);
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--deep);
+  }
+
+  .settings-todo-row input:focus {
+    outline: none;
+    border-color: var(--bright);
+  }
+
+  .todo-delete-btn {
+    border: none;
+    background: transparent;
+    color: #6b8fa3;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 8px;
+    line-height: 1;
+    border-radius: 6px;
+    transition: background 0.15s ease, color 0.15s ease;
+    flex: 0 0 auto;
+  }
+
+  .todo-delete-btn:hover {
+    background: #dcebf2;
+    color: var(--deep);
+  }
+
+  .add-todo-btn {
+    width: 100%;
+    border: 2px dashed var(--pale);
+    background: transparent;
+    color: var(--mid);
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+
+  .add-todo-btn:hover {
+    background: var(--pale);
   }
 
   .modal-section-title {
@@ -801,8 +924,9 @@
     <ul class="history-list" id="historyList"></ul>
   </div>
 
-  <div class="logout-row">
-    <button class="logout-link" id="logoutBtn">Ekki þú? Skrá út</button>
+  <div class="todos" id="todosSection">
+    <div class="history-title">Verkefni dagsins</div>
+    <ul class="todo-list" id="todoList"></ul>
   </div>
 </div>
 
@@ -830,12 +954,22 @@
       <input type="number" id="settingsGoalInput" min="50" step="50" />
     </div>
 
+    <div class="modal-section-title" style="margin-top: 20px;">Dagleg verkefni</div>
+    <div id="settingsTodoList"></div>
+    <button type="button" class="add-todo-btn" id="addTodoBtn">+ Bæta við verkefni</button>
+
     <div class="modal-actions">
       <button class="modal-btn cancel" id="settingsCancelBtn">Hætta við</button>
       <button class="modal-btn save" id="settingsSaveBtn">Vista</button>
     </div>
+
+    <div class="logout-row">
+      <button class="logout-link" id="logoutBtn">Skrá út</button>
+    </div>
   </div>
 </div>
+
+<canvas class="confetti-canvas" id="confettiCanvas" style="display: none;"></canvas>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -882,12 +1016,16 @@
   const customAddBtn = document.getElementById('customAddBtn');
   const historyList = document.getElementById('historyList');
   const sizeRow = document.getElementById('sizeRow');
+  const todoList = document.getElementById('todoList');
+  const confettiCanvas = document.getElementById('confettiCanvas');
 
   const settingsBtn = document.getElementById('settingsBtn');
   const settingsOverlay = document.getElementById('settingsOverlay');
   const settingsCancelBtn = document.getElementById('settingsCancelBtn');
   const settingsSaveBtn = document.getElementById('settingsSaveBtn');
   const settingsGoalInput = document.getElementById('settingsGoalInput');
+  const settingsTodoList = document.getElementById('settingsTodoList');
+  const addTodoBtn = document.getElementById('addTodoBtn');
   const sizeInputs = [
     { ml: document.getElementById('sizeMl0'), name: document.getElementById('sizeName0') },
     { ml: document.getElementById('sizeMl1'), name: document.getElementById('sizeName1') },
@@ -895,12 +1033,13 @@
   ];
 
   // --- App state (per logged-in user) ---
-  let state = { pin: '', date: null, totalMl: 0, goalMl: 2000, selectedSize: 500, history: [], sizes: DEFAULT_SIZES };
+  let state = { pin: '', date: null, totalMl: 0, goalMl: 2000, selectedSize: 500, history: [], sizes: DEFAULT_SIZES, todos: [], celebratedDate: null };
   let initialized = false;
   let sizeButtonEls = [];
   let userId = null;
   let stateDocRef = null;
   let unsubscribeSnapshot = null;
+  let pendingTodos = [];
 
   function sanitizeUsername(raw) {
     return raw.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
@@ -1026,6 +1165,129 @@
     }
   }
 
+  function renderTodos() {
+    todoList.innerHTML = '';
+    const todos = Array.isArray(state.todos) ? state.todos : [];
+    if (todos.length === 0) {
+      const empty = document.createElement('li');
+      empty.className = 'history-empty';
+      empty.textContent = 'Engin verkefni ennþá — bættu við í stillingum.';
+      todoList.appendChild(empty);
+      return;
+    }
+    todos.forEach((todo) => {
+      const li = document.createElement('li');
+      li.className = 'todo-item' + (todo.done ? ' done' : '');
+      li.dataset.id = todo.id;
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = !!todo.done;
+      checkbox.addEventListener('change', () => {
+        const t = state.todos.find((x) => x.id === todo.id);
+        if (t) t.done = checkbox.checked;
+        li.classList.toggle('done', checkbox.checked);
+        save();
+      });
+
+      const textInput = document.createElement('input');
+      textInput.type = 'text';
+      textInput.value = todo.text || '';
+      textInput.placeholder = 'Verkefni';
+      textInput.addEventListener('input', () => {
+        const t = state.todos.find((x) => x.id === todo.id);
+        if (t) t.text = textInput.value;
+      });
+      textInput.addEventListener('blur', () => save());
+      textInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          textInput.blur();
+        }
+      });
+
+      li.appendChild(checkbox);
+      li.appendChild(textInput);
+      todoList.appendChild(li);
+    });
+  }
+
+  function playConfetti() {
+    const ctx = confettiCanvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    confettiCanvas.width = width * dpr;
+    confettiCanvas.height = height * dpr;
+    confettiCanvas.style.width = width + 'px';
+    confettiCanvas.style.height = height + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    confettiCanvas.style.display = 'block';
+
+    const colors = ['#3fb8e0', '#1c7ea6', '#0b3d5c', '#ffd166', '#ef476f', '#06d6a0'];
+    const count = 140;
+    const particles = [];
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: -20 - Math.random() * height * 0.4,
+        w: 6 + Math.random() * 6,
+        h: 8 + Math.random() * 8,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rotation: Math.random() * Math.PI * 2,
+        rotationSpeed: (Math.random() - 0.5) * 0.3,
+        vx: (Math.random() - 0.5) * 2.5,
+        vy: 2 + Math.random() * 3,
+        sway: Math.random() * Math.PI * 2
+      });
+    }
+
+    const durationMs = 3200;
+    const start = performance.now();
+
+    function frame(now) {
+      const elapsed = now - start;
+      ctx.clearRect(0, 0, width, height);
+
+      particles.forEach((p) => {
+        p.y += p.vy;
+        p.sway += 0.05;
+        p.x += p.vx + Math.sin(p.sway) * 0.6;
+        p.rotation += p.rotationSpeed;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = elapsed > durationMs - 500 ? Math.max(0, (durationMs - elapsed) / 500) : 1;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      });
+
+      if (elapsed < durationMs) {
+        requestAnimationFrame(frame);
+      } else {
+        ctx.clearRect(0, 0, width, height);
+        confettiCanvas.style.display = 'none';
+      }
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  function checkCelebration() {
+    const todos = Array.isArray(state.todos) ? state.todos : [];
+    const allTodosDone = todos.length > 0 && todos.every((t) => t.done);
+    const goalReached = state.goalMl > 0 && state.totalMl >= state.goalMl;
+    const key = todayKey();
+
+    if (allTodosDone && goalReached && state.celebratedDate !== key) {
+      state.celebratedDate = key;
+      playConfetti();
+      save();
+    }
+  }
+
   function render() {
     countDisplay.textContent = state.totalMl;
     dateLabel.textContent = formatDisplayDate();
@@ -1035,7 +1297,9 @@
     renderSizeButtons();
     highlightSize();
     renderHistory();
+    renderTodos();
     userBadge.textContent = userId ? ('Innskráð(ur) sem ' + userId) : '';
+    checkCelebration();
   }
 
   function playAddAnimation(amountMl, sourceButton) {
@@ -1102,6 +1366,8 @@
     state.selectedSize = typeof data.selectedSize === 'number' ? data.selectedSize : 500;
     state.history = Array.isArray(data.history) ? data.history : [];
     state.sizes = Array.isArray(data.sizes) && data.sizes.length > 0 ? data.sizes : DEFAULT_SIZES;
+    state.todos = Array.isArray(data.todos) ? data.todos : [];
+    state.celebratedDate = data.celebratedDate || null;
   }
 
   function checkForNewDay() {
@@ -1110,6 +1376,9 @@
       state.date = key;
       state.totalMl = 0;
       state.history = [];
+      if (Array.isArray(state.todos)) {
+        state.todos = state.todos.map((t) => ({ id: t.id, text: t.text, done: false }));
+      }
       render();
       save();
     }
@@ -1147,7 +1416,7 @@
     unsubscribeSnapshot = null;
     userId = null;
     stateDocRef = null;
-    state = { pin: '', date: null, totalMl: 0, goalMl: 2000, selectedSize: 500, history: [], sizes: DEFAULT_SIZES };
+    state = { pin: '', date: null, totalMl: 0, goalMl: 2000, selectedSize: 500, history: [], sizes: DEFAULT_SIZES, todos: [], celebratedDate: null };
     localStorage.removeItem(AUTH_STORAGE_KEY);
     appCard.style.display = 'none';
     loginScreen.style.display = 'block';
@@ -1181,7 +1450,7 @@
           return;
         }
       } else {
-        const freshState = { pin: pin, date: null, totalMl: 0, goalMl: 2000, selectedSize: 500, history: [], sizes: DEFAULT_SIZES };
+        const freshState = { pin: pin, date: null, totalMl: 0, goalMl: 2000, selectedSize: 500, history: [], sizes: DEFAULT_SIZES, todos: [], celebratedDate: null };
         await setDoc(ref, freshState);
       }
 
@@ -1255,6 +1524,45 @@
 
   // --- Settings modal ---
 
+  function renderSettingsTodos() {
+    settingsTodoList.innerHTML = '';
+    pendingTodos.forEach((todo, index) => {
+      const row = document.createElement('div');
+      row.className = 'settings-todo-row';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = todo.text || '';
+      input.placeholder = 'Verkefni (t.d. Taka vítamín)';
+      input.addEventListener('input', () => {
+        pendingTodos[index].text = input.value;
+      });
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'todo-delete-btn';
+      delBtn.textContent = '×';
+      delBtn.setAttribute('aria-label', 'Eyða verkefni');
+      delBtn.addEventListener('click', () => {
+        pendingTodos.splice(index, 1);
+        renderSettingsTodos();
+      });
+
+      row.appendChild(input);
+      row.appendChild(delBtn);
+      settingsTodoList.appendChild(row);
+    });
+  }
+
+  addTodoBtn.addEventListener('click', () => {
+    pendingTodos.push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      text: '',
+      done: false
+    });
+    renderSettingsTodos();
+  });
+
   function openSettings() {
     const sizes = Array.isArray(state.sizes) && state.sizes.length > 0 ? state.sizes : DEFAULT_SIZES;
     sizeInputs.forEach((inputs, i) => {
@@ -1263,6 +1571,8 @@
       inputs.name.value = size ? (size.name || '') : '';
     });
     settingsGoalInput.value = state.goalMl;
+    pendingTodos = (Array.isArray(state.todos) ? state.todos : []).map((t) => ({ ...t }));
+    renderSettingsTodos();
     settingsOverlay.classList.add('open');
   }
 
@@ -1291,6 +1601,8 @@
 
     const goalVal = parseInt(settingsGoalInput.value, 10);
     state.goalMl = (!isNaN(goalVal) && goalVal > 0) ? goalVal : state.goalMl;
+
+    state.todos = pendingTodos.filter((t) => t.text && t.text.trim() !== '');
 
     render();
     save();
